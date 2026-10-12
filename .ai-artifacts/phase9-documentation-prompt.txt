@@ -1,0 +1,11 @@
+The Testcontainers setup and validation checkpoints are fully approved. We have successfully completed all coding, exceptions frameworks, web routes, and concurrency gates. Let's finish the project by generating our final architectural log entries. Please provide the Markdown text blocks for the following two tracking documentation updates:
+
+1. The Phase 5 through Phase 8 Update for `setup.md`:
+   - Write out complete log entries detailing our execution path for Phase 5 (Domain Exceptions), Phase 6 (InventoryService Logic), Phase 7 (Presentation & Web Tier Controllers), and Phase 8 (Integration Test Verification).
+   - Document how we safely bypassed JVM-local synchronization overhead by using PostgreSQL database-level row-locking, and detail the strict Jackson configurations we used to shield the microservice from invalid input truncation.
+
+2. The Final Operational Application Run Roadmap:
+   - Provide a clean, scannable block to append to our root `README.md`.
+   - Explicitly detail the exact terminal commands required by a reviewer to boot up our local Postgres background container (`docker compose up -d`), compile the project via Gradle wrappers, execute the complete Testcontainers validation runner (`./gradlew test`), and hit the active endpoints using basic `curl` statements.
+
+Provide the complete text blocks without high-level placeholders or shorthand documentation summaries.
