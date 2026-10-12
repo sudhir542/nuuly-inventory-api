@@ -57,10 +57,10 @@ volumes:
 **Action:** Moved the database name, username, and password out of `docker-compose.yml` into a local `.env` file so credentials are never committed. Docker Compose loads `.env` from the project root automatically, and the `:?` syntax makes `docker compose up` fail fast if any value is missing.
 
 * `.env` — real local values; listed in `.gitignore` and never checked in.
-* `.env.example` — committed template with the same keys and empty credentials.
+* `.env.example` — committed template with the same keys and working local-only default credentials (see Phase 9.2), so a fresh clone only needs `cp`.
 
 ```bash
-# Create your local .env from the template, then fill in POSTGRES_USER and POSTGRES_PASSWORD
+# Create your local .env from the template (the defaults work as-is for local development)
 cp .env.example .env
 
 # Confirm git ignores it
@@ -416,4 +416,56 @@ Booted the packaged jar against a throwaway local PostgreSQL and exercised every
 * **Mixed-load invariant:** 200 random restocks (+3) and purchases (−5). Asserts only `200` or `400 Insufficient inventory` responses, and `initial + added − sold = final ≥ 0`.
 
 ## 8.3 Verification
-All 41 tests passed. Docker was not available on the authoring machine, so the run substituted a throwaway local PostgreSQL for the Testcontainers instance by temporarily overriding the base class's datasource properties; the committed base class is unchanged. Run `./gradlew test` with Docker running to execute the suite against the `postgres:15-alpine` container.
+* **First run (Docker unavailable):** All 41 tests passed against a throwaway local PostgreSQL that temporarily stood in for the Testcontainers instance, by overriding the base class's datasource properties. The committed base class was left unchanged.
+* **Real Testcontainers run:** With Docker Desktop running, `./gradlew test` first failed every test with `Status 400` from Docker. The fix is described in Phase 9.1. After it, all tests passed against a real `postgres:15-alpine` container: Testcontainers reported `Server Version: 29.8.2` and the container started in under a second.
+
+---
+
+# Phase 9: Reviewer Readiness Audit
+
+**Action:** Checked the finished repository against every item in the Nuuly assessment brief: the OpenAPI contract, the AI-usage guidance, and the submission requirements. A fresh `git clone` of the published repository was used to reproduce what a reviewer would experience. All functional requirements were met. Five issues affecting a reviewer's first run were found and fixed.
+
+## 9.1 Testcontainers Incompatibility with Docker Engine 29
+**Problem:** `./gradlew test` failed all tests on a machine running Docker Desktop with Docker Engine 29.8.2. Testcontainers logged `DockerDesktopClientProviderStrategy: failed with exception BadRequestException (Status 400 …)`.
+
+**Cause:** Spring Boot 3.5.6 manages Testcontainers 1.21.3. Its default Docker API version is below the minimum that Docker Engine 29 accepts, so the engine rejects the handshake. The tests themselves were never reached. Any reviewer on a current Docker Desktop would have hit the same failure.
+
+**Resolution:** Pinned the managed version in `build.gradle.kts`:
+
+```kotlin
+extra["testcontainers.version"] = "1.21.4"
+```
+
+Testcontainers 1.21.4 negotiates a supported API version. The full suite then passed against a real `postgres:15-alpine` container.
+
+## 9.2 Zero-Edit Local Credentials
+**Problem:** Following the README literally on a fresh clone (`cp .env.example .env`, then `docker compose up -d`) failed with `required variable POSTGRES_USER is missing a value`, because the template's credentials were empty. That conflicts with the brief's requirement to start "with minimal setup".
+
+**Resolution:** `.env.example` now ships working local-only values (`POSTGRES_USER=inventory`, `POSTGRES_PASSWORD=inventory_local_dev`), and the README's step 1 is just `cp .env.example .env`.
+
+**Why this does not weaken the secrets policy:**
+* These values only protect a throwaway Postgres container bound to the reviewer's own machine.
+* The real `.env` file is still git-ignored.
+* `application.yml` still has no credential defaults, so deployed environments must supply real values from their secret store.
+* The `:?` guards in `docker-compose.yml` still fail fast if a value is removed.
+
+## 9.3 Contract Alignment for `GET /inventory/{skuId}`
+**Problem:** A `GET` for a SKU ID longer than 64 characters returned `400`. The contract defines only `200` and `404` for `getInventory`.
+
+**Resolution:** Removed the `@NotBlank` / `@Size` constraints from the `GET` path variable only. A blank or over-long SKU cannot exist in the table, so the lookup now returns `404 SKU not found: …` naturally. The `POST` routes keep the constraints, because the contract allows `400` there and a 65-character SKU must never be created. Added the integration test `get returns 404 rather than 400 for a SKU id too long to exist`, and updated `tech-spec.md` §5.1, §5.4 row 5, and §5.5.
+
+## 9.4 README Troubleshooting
+**Problem:** Several environment problems met during development were undocumented, and a reviewer could hit any of them:
+* A Homebrew PostgreSQL on `127.0.0.1:5432` intercepted the app's connection, causing `FATAL: role "nuuly_user" does not exist`.
+* The `docker` CLI was missing from `PATH` while Docker Desktop was running.
+* Gradle failed on Java 27.
+* `bootRun` appeared stuck at `85% EXECUTING`.
+
+**Resolution:** Added a Troubleshooting section to `README.md` covering each case with the diagnostic command and the fix. It also covers a `pgdata` volume created earlier with different credentials, which Postgres ignores after first initialization. Also corrected the Swagger Editor link to `https://editor.swagger.io`.
+
+## 9.5 Repository Hygiene
+* Removed `nuuly-inventory-api-commands.txt`, which only contained the output of `git init`.
+* Exported the AI-assisted development session transcript for review before deciding whether to add it to `.ai-artifacts/`, per the brief's request for chat exports.
+
+## 9.6 Verification
+`./gradlew test` with Docker running: 42 tests passed against `postgres:15-alpine` (the 41 from Phase 8 plus the new `GET` contract test).

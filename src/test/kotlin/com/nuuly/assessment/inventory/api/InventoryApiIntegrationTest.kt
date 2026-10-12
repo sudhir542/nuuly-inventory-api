@@ -155,6 +155,15 @@ class InventoryApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `get returns 404 rather than 400 for a SKU id too long to exist`() {
+        val skuId = "x".repeat(65)
+
+        val response = rest.getForEntity("/inventory/$skuId", String::class.java)
+
+        assertPlainTextError(response, HttpStatus.NOT_FOUND, "SKU not found: $skuId")
+    }
+
+    @Test
     fun `errors stay plain text even when the client accepts only JSON`() {
         val headers = HttpHeaders().apply { accept = listOf(MediaType.APPLICATION_JSON) }
 

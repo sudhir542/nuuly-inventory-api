@@ -13,6 +13,10 @@ repositories {
     mavenCentral()
 }
 
+// Spring Boot 3.5.6 manages Testcontainers 1.21.3, which Docker Engine 29+ rejects (its default
+// Docker API version is below the engine's minimum). 1.21.4 negotiates a supported version.
+extra["testcontainers.version"] = "1.21.4"
+
 dependencies {
     // Web layer and request validation
     implementation("org.springframework.boot:spring-boot-starter-web")

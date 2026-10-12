@@ -21,13 +21,13 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 25)
 
 ## 1. Configure database credentials
 
-Credentials live in a git-ignored `.env` file, which both Docker Compose and the application read.
+Credentials live in a git-ignored `.env` file, which both Docker Compose and the application read. The template ships with working local-only values, so copying it is the only step:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set `POSTGRES_USER` and `POSTGRES_PASSWORD` to any values you choose.
+You can change the values in `.env` if you like. They only protect the Postgres container on your own machine.
 
 ## 2. Start PostgreSQL
 
@@ -151,8 +151,8 @@ Body: `Malformed request body: quantity must be an integer between 1 and 2147483
 
 | Status | When |
 |---|---|
-| `400` | Invalid or missing quantity, malformed JSON, SKU ID longer than 64 characters, insufficient stock, or a restock past 2,147,483,647 |
-| `404` | SKU does not exist, or unknown path |
+| `400` | Invalid or missing quantity, malformed JSON, a SKU ID longer than 64 characters on a `POST`, insufficient stock, or a restock past 2,147,483,647 |
+| `404` | SKU does not exist (including any SKU ID on a `GET` that is too long to exist), or unknown path |
 | `405` | HTTP method not supported on the path |
 | `415` | Request body is not `application/json` |
 | `503` | The SKU's row lock could not be acquired within 3 seconds; retry after the `Retry-After` interval |
@@ -171,6 +171,36 @@ To also delete all stored inventory data, remove the volume:
 docker compose down -v
 ```
 
+## Troubleshooting
+
+**`FATAL: role "inventory" does not exist` (or password authentication failed) on startup**
+
+Another PostgreSQL is already listening on port 5432, commonly a Homebrew install, and the app connected to it instead of the container. Check what owns the port:
+
+```bash
+lsof -nP -iTCP:5432 -sTCP:LISTEN
+```
+
+Either stop the other server (for Homebrew: `brew services stop postgresql@<version>`), or move the container to another port. To move it, change `"5432:5432"` to `"5433:5432"` in `docker-compose.yml`, add `POSTGRES_PORT=5433` to `.env`, and run `docker compose up -d` again.
+
+The same error appears if the `pgdata` volume was created earlier with different credentials. Postgres only reads them the first time it starts with an empty volume. Reset it with `docker compose down -v`, then `docker compose up -d`.
+
+**`docker: command not found` while Docker Desktop is running**
+
+The Docker CLI is not on your `PATH`. Enable it in Docker Desktop under Settings → Advanced, or add it for the current shell:
+
+```bash
+export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin"
+```
+
+**`Unsupported class file major version` or "incompatible Java" when running Gradle**
+
+Gradle 9.6 cannot run on Java 27 or newer. Point `JAVA_HOME` at JDK 17–26 as shown under Prerequisites.
+
+**`./gradlew bootRun` sits at `85% EXECUTING`**
+
+That is expected. `bootRun` runs the server in the foreground and only finishes when the app stops. Look for `Started InventoryApplicationKt` in the log, then send requests from a second terminal.
+
 ## 📋 API Contract & Documentation
 
 This service strictly implements a contract-first architecture matching the requested OpenAPI 3.0.3 specification.
@@ -178,4 +208,4 @@ This service strictly implements a contract-first architecture matching the requ
 The raw contract file is committed directly to the project root:
 * **File Location:** `openapi.yaml`
 
-To interact visually with the API layout, you can copy the contents of `openapi.yaml` into the [Swagger Editor](https://swagger.io) or use native OpenAPI extension viewers directly within your IDE (such as IntelliJ IDEA or VSCode).
+To interact visually with the API layout, you can copy the contents of `openapi.yaml` into the [Swagger Editor](https://editor.swagger.io) or use native OpenAPI extension viewers directly within your IDE (such as IntelliJ IDEA or VSCode).

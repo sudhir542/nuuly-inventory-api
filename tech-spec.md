@@ -377,7 +377,7 @@ class InventoryController(private val service: InventoryService) {
     fun listInventory(): List<InventoryItem>
 
     @GetMapping("/{skuId}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun getInventory(@PathVariable @NotBlank @Size(max = 64) skuId: String): InventoryItem
+    fun getInventory(@PathVariable skuId: String): InventoryItem   // no constraints: GET allows only 200/404
 
     @PostMapping(
         "/{skuId}",
@@ -447,7 +447,7 @@ All errors are produced by a single `@RestControllerAdvice` (`GlobalExceptionHan
 | 2 | Purchase quantity exceeds stock on hand | `InsufficientInventoryException` | `400` | `Insufficient inventory` |
 | 3 | `quantity` missing or `null` | `HandlerMethodValidationException` / `MethodArgumentNotValidException` | `400` | `quantity is required` |
 | 4 | `quantity` < 1 (zero or negative) | `HandlerMethodValidationException` / `MethodArgumentNotValidException` | `400` | `quantity must be greater than or equal to 1` |
-| 5 | `skuId` blank or longer than 64 chars | `HandlerMethodValidationException` | `400` | `skuId must be between 1 and 64 characters` |
+| 5 | `skuId` blank or longer than 64 chars on a POST route (a GET lookup of such an id returns `404`, the only error the contract allows for GET) | `HandlerMethodValidationException` | `400` | `skuId must be between 1 and 64 characters` |
 | 6 | Body missing, not valid JSON, `quantity` not an integer (float, string, boolean, out of 32-bit range) | `HttpMessageNotReadableException` | `400` | `Malformed request body: quantity must be an integer between 1 and 2147483647` |
 | 7 | Restock would push stock past 2,147,483,647 | `InvalidQuantityException` | `400` | `Resulting quantity exceeds maximum of 2147483647` |
 | 8 | CHECK constraint `chk_inventory_quantity_non_negative` fired (defence in depth) | `DataIntegrityViolationException` (SQLSTATE `23514`) | `400` | `Insufficient inventory` (logged at `ERROR`) |
@@ -486,7 +486,7 @@ A purchase of an unknown SKU with an invalid body therefore returns `400`, not `
 4. Upsert; 0 affected rows → `400` (row 7)
 5. Re-read the row in the same transaction, commit → `200` with the updated `InventoryItem`
 
-**`GET /inventory/{skuId}`**: path validation → `400`; lookup → `404` or `200`.
+**`GET /inventory/{skuId}`**: lookup → `404` or `200`. There is no path validation, because the contract defines only `200` and `404` for this operation; a blank or over-long SKU simply does not exist.
 
 **`GET /inventory`**: always `200`; ordered by `sku_id` ascending (byte order, per `COLLATE "C"`); `[]` when empty.
 

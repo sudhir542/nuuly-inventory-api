@@ -31,13 +31,10 @@ class InventoryController(private val inventoryService: InventoryService) {
     fun listInventory(): List<InventoryItem> =
         inventoryService.listAllInventory().map(InventoryItem::from)
 
+    // No skuId constraints here: the contract allows only 200 or 404 for this operation, and a
+    // blank or over-long SKU cannot exist in the table, so the lookup returns 404 naturally.
     @GetMapping("/{skuId}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun getInventory(
-        @PathVariable
-        @NotBlank(message = SKU_ID_MESSAGE)
-        @Size(max = InventoryEntity.MAX_SKU_ID_LENGTH, message = SKU_ID_MESSAGE)
-        skuId: String,
-    ): InventoryItem =
+    fun getInventory(@PathVariable skuId: String): InventoryItem =
         InventoryItem.from(inventoryService.getInventory(skuId))
 
     @PostMapping(
