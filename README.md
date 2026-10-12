@@ -170,3 +170,12 @@ To also delete all stored inventory data, remove the volume:
 ```bash
 docker compose down -v
 ```
+
+## 📋 API Contract & Documentation
+
+This service strictly implements a contract-first architecture matching the requested OpenAPI 3.0.3 specification.
+
+The raw contract file is committed directly to the project root:
+* **File Location:** `openapi.yaml`
+
+To interact visually with the API layout, you can copy the contents of `openapi.yaml` into the [Swagger Editor](https://swagger.io) or use native OpenAPI extension viewers directly within your IDE (such as IntelliJ IDEA or VSCode).
