@@ -65,14 +65,15 @@ com.nuuly.assessment.inventory
 │       └── ApiExceptionHandler.kt     @RestControllerAdvice → text/plain errors
 ├── domain
 │   ├── InventoryEntity.kt             JPA entity mapped to `inventory`
-│   ├── InventoryService.kt            @Transactional business operations
 │   └── exception
 │       └── InventoryExceptions.kt     sealed InventoryException + SkuNotFound / InsufficientInventory / InvalidQuantity
+├── service
+│   └── InventoryService.kt            @Transactional business operations
 └── persistence
     └── InventoryRepository.kt         Spring Data JPA + native upsert + locking query
 ```
 
-Layering rule: `api` → `domain` → `persistence`. Controllers never call repositories directly. Services never see HTTP types.
+Layering rule: `api` → `service` → `persistence`, with `domain` (entity and exceptions) shared by all three. Controllers never call repositories directly. Services never see HTTP types.
 
 ### 2.2 Build changes required
 
@@ -272,7 +273,7 @@ A single conditional statement (`UPDATE inventory SET quantity = quantity - :q W
 ```kotlin
 interface InventoryRepository : JpaRepository<InventoryEntity, String> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)                 // exclusive row lock (SELECT … FOR UPDATE family)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)                 // Hibernate 6 emits SELECT … FOR NO KEY UPDATE
     @Query("select i from InventoryEntity i where i.skuId = :skuId")
     fun findByIdForUpdate(@Param("skuId") skuId: String): InventoryEntity?
 

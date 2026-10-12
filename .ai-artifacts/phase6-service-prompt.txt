@@ -1,0 +1,15 @@
+Your architectural decision to optimize the `InventoryException` layer by omitting stack traces is fully approved. Let's proceed with generating the transactional business logic layer. Please provide the implementation block for the following file:
+
+- File path: src/main/kotlin/com/nuuly/assessment/inventory/service/InventoryService.kt
+
+Ensure the Kotlin service layer implementation strictly honors these core tenets:
+1. Annotate the service with Spring's standard `@Service` and ensure methods are fully managed by declarative transactions via `@Transactional(readOnly = true)`.
+2. Implement `getInventory(skuId: String): InventoryEntity`: Fetches the record from the repository, throwing our custom `SkuNotFoundException` if it is missing.
+3. Implement `listAllInventory(): List<InventoryEntity>`: Leverages the repository's sorted query to fetch all assets for bulk presentation.
+4. Implement a write-committed, transactional `createOrUpdateInventory(skuId: String, quantityToAdd: Int): InventoryEntity`: Utilizes our custom native query upsert mapping (`upsertAddQuantity`) to safely increment values. If an addition would trigger an integer overflow, throw our custom `InvalidQuantityException`.
+5. Implement a write-committed, transactional `purchaseInventory(skuId: String, quantityToDeduct: Int): InventoryEntity`:
+   - Uses our explicit pessimistic write locking repository method (`findByIdForUpdate`) to lock the database row instantly and prevent multi-threaded race conditions.
+   - Evaluates stock limits: If the record is missing, throw `SkuNotFoundException`. If the current stock is lower than `quantityToDeduct`, throw `InsufficientInventoryException`.
+   - Modifies the entity directly and saves the changes back, allowing the write-committed transaction boundary to release the row lock upon completion.
+
+Provide the complete, production-grade text block without high-level shortcuts or placeholders.
