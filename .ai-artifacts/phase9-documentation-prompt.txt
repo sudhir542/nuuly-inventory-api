@@ -1,11 +1,10 @@
-The Testcontainers setup and validation checkpoints are fully approved. We have successfully completed all coding, exceptions frameworks, web routes, and concurrency gates. Let's finish the project by generating our final architectural log entries. Please provide the Markdown text blocks for the following two tracking documentation updates:
+The final README.md and setup.md outlines are approved. Let's fix the alignment gaps in our documentation logs to ensure absolute consistency for the review panel. Please provide the final markdown text blocks to resolve the following two discrepancies:
 
-1. The Phase 5 through Phase 8 Update for `setup.md`:
-   - Write out complete log entries detailing our execution path for Phase 5 (Domain Exceptions), Phase 6 (InventoryService Logic), Phase 7 (Presentation & Web Tier Controllers), and Phase 8 (Integration Test Verification).
-   - Document how we safely bypassed JVM-local synchronization overhead by using PostgreSQL database-level row-locking, and detail the strict Jackson configurations we used to shield the microservice from invalid input truncation.
+1. Generate the Missing Log Entries for setup.md:
+   - Provide the complete markdown logs for Phase 2 (Spec-Driven Architecture & tech-spec.md Generation), Phase 3 (Database Flyway Migration Script and Repository Mapping), and Phase 4 (build.gradle.kts Dependency and application.yml Environment Setup).
+   - Write these sections in the exact same detailed, technical narrative style used in Phases 5–8, detailing why choices like 'fillfactor=90' and 'ddl-auto: validate' were explicitly introduced.
 
-2. The Final Operational Application Run Roadmap:
-   - Provide a clean, scannable block to append to our root `README.md`.
-   - Explicitly detail the exact terminal commands required by a reviewer to boot up our local Postgres background container (`docker compose up -d`), compile the project via Gradle wrappers, execute the complete Testcontainers validation runner (`./gradlew test`), and hit the active endpoints using basic `curl` statements.
+2. Update Section 2 AI Workspace Filename:
+   - Provide the updated markdown snippet for Section 2 of setup.md to explicitly state that our system framework governance instructions reside in `.ai-artifacts/ai-instructions.md` instead of the legacy `.cursorrules` name.
 
-Provide the complete text blocks without high-level placeholders or shorthand documentation summaries.
+Provide the complete text blocks ready to be pasted directly into our existing file.
