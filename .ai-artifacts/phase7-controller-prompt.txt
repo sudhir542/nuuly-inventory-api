@@ -1,0 +1,18 @@
+Your transactional service layer configuration and lock verification metrics are exceptional. Let's move forward by implementing the presentation layer. Please provide the complete implementation blocks for the following components one by one:
+
+1. Request and Response DTO Records:
+   - Provide the incoming request model `InventoryQuantity` and response contract `InventoryItem` as clean Kotlin classes matching the structural layout and naming schemas defined by our OpenAPI specification.
+   - Ensure the request parameters enforce built-in bean constraints (such as `@field:NotNull` and `@field:Min(1)`) to automatically catch invalid or missing inputs.
+
+2. The Global Exception Handler Controller Advice:
+   - File path: src/main/kotlin/com/nuuly/assessment/inventory/api/exception/GlobalExceptionHandler.kt
+   - Build a standard Spring `@RestControllerAdvice`.
+   - Implement mapping functions that intercept our custom unchecked exception signals (`SkuNotFoundException`, `InsufficientInventoryException`, and `InvalidQuantityException`) along with standard Spring deserialization errors (`HttpMessageNotReadableException`, `MethodArgumentNotValidException`).
+   - Format the handlers to explicitly intercept payloads and translate them into a `text/plain` Content-Type response body containing the exception's message string, perfectly mirroring our status code blueprint (404 for missing items, 400 for errors or insufficient stock).
+
+3. The Web API Controller:
+   - File path: src/main/kotlin/com/nuuly/assessment/inventory/api/InventoryController.kt
+   - Build out the primary `@RestController` using constructor dependency injection to wire in our `InventoryService`.
+   - Implement handlers for all four OpenAPI routes: `GET /inventory/{skuId}`, `POST /inventory/{skuId}`, `POST /inventory/{skuId}/purchase`, and `GET /inventory`. Use `@Valid` constraints on incoming request bodies to activate automated parameter verification.
+
+Provide the complete, functional code blocks without high-level shortcuts or placeholders.

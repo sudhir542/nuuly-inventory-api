@@ -59,10 +59,10 @@ com.nuuly.assessment.inventory
 ├── api
 │   ├── InventoryController.kt         HTTP mapping only; no business logic
 │   ├── dto
-│   │   ├── InventoryQuantityRequest.kt
-│   │   └── InventoryItemResponse.kt
-│   └── error
-│       └── ApiExceptionHandler.kt     @RestControllerAdvice → text/plain errors
+│   │   ├── InventoryQuantity.kt       request body (OpenAPI `InventoryQuantity`)
+│   │   └── InventoryItem.kt           response body (OpenAPI `InventoryItem`)
+│   └── exception
+│       └── GlobalExceptionHandler.kt  @RestControllerAdvice → text/plain errors
 ├── domain
 │   ├── InventoryEntity.kt             JPA entity mapped to `inventory`
 │   └── exception
@@ -374,10 +374,10 @@ If any path ever tries to persist `quantity < 0`, the CHECK constraint `chk_inve
 class InventoryController(private val service: InventoryService) {
 
     @GetMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun listInventory(): List<InventoryItemResponse>
+    fun listInventory(): List<InventoryItem>
 
     @GetMapping("/{skuId}", produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun getInventory(@PathVariable @NotBlank @Size(max = 64) skuId: String): InventoryItemResponse
+    fun getInventory(@PathVariable @NotBlank @Size(max = 64) skuId: String): InventoryItem
 
     @PostMapping(
         "/{skuId}",
@@ -386,8 +386,8 @@ class InventoryController(private val service: InventoryService) {
     )
     fun createInventory(
         @PathVariable @NotBlank @Size(max = 64) skuId: String,
-        @Valid @RequestBody request: InventoryQuantityRequest,
-    ): InventoryItemResponse
+        @Valid @RequestBody request: InventoryQuantity,
+    ): InventoryItem
 
     @PostMapping(
         "/{skuId}/purchase",
@@ -396,8 +396,8 @@ class InventoryController(private val service: InventoryService) {
     )
     fun purchaseItem(
         @PathVariable @NotBlank @Size(max = 64) skuId: String,
-        @Valid @RequestBody request: InventoryQuantityRequest,
-    ): InventoryItemResponse
+        @Valid @RequestBody request: InventoryQuantity,
+    ): InventoryItem
 }
 ```
 
@@ -406,18 +406,18 @@ The controller class is **not** annotated with `@Validated`. Spring Framework 6.
 ### 5.2 DTOs
 
 ```kotlin
-data class InventoryQuantityRequest(
+data class InventoryQuantity(
     @field:NotNull(message = "quantity is required")
     @field:Min(value = 1, message = "quantity must be greater than or equal to 1")
     val quantity: Int?,
 )
 
-data class InventoryItemResponse(
+data class InventoryItem(
     val skuId: String,
     val quantity: Int,
 ) {
     companion object {
-        fun from(entity: InventoryEntity) = InventoryItemResponse(entity.skuId, entity.quantity)
+        fun from(entity: InventoryEntity) = InventoryItem(entity.skuId, entity.quantity)
     }
 }
 ```
@@ -439,7 +439,7 @@ Additive overflow (existing stock + requested quantity > 2,147,483,647) is detec
 
 ### 5.4 Exception → HTTP status → `text/plain` body mapping
 
-All errors are produced by a single `@RestControllerAdvice` (`ApiExceptionHandler`). Every handler returns `ResponseEntity<String>` with `Content-Type: text/plain;charset=UTF-8` set explicitly. Setting the content type explicitly makes Spring skip content negotiation, so a client sending `Accept: application/json` still receives the `text/plain` error required by the contract instead of a `406`.
+All errors are produced by a single `@RestControllerAdvice` (`GlobalExceptionHandler`). Every handler returns `ResponseEntity<String>` with `Content-Type: text/plain;charset=UTF-8` set explicitly. Setting the content type explicitly makes Spring skip content negotiation, so a client sending `Accept: application/json` still receives the `text/plain` error required by the contract instead of a `406`.
 
 | # | Trigger | Exception caught | Status | Body (exact text) |
 |---|---|---|---|---|
@@ -461,7 +461,7 @@ Rows 1–8 are within the published contract. Rows 9–13 are infrastructure res
 
 When several validation errors occur in one request, the handler returns the **first** message in this fixed order: `skuId`, then `quantity` null, then `quantity` range. This keeps responses deterministic for clients and tests.
 
-To route rows 9–11 through the advice instead of Spring Boot's JSON `/error` page, `ApiExceptionHandler` handles these exceptions explicitly. It does not extend `ResponseEntityExceptionHandler`, whose built-in handlers emit RFC 7807 `application/problem+json`.
+To route rows 9–11 through the advice instead of Spring Boot's JSON `/error` page, `GlobalExceptionHandler` handles these exceptions explicitly. It does not extend `ResponseEntityExceptionHandler`, whose built-in handlers emit RFC 7807 `application/problem+json`.
 
 ### 5.5 Evaluation order per endpoint
 
