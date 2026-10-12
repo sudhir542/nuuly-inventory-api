@@ -1,0 +1,10 @@
+# Secrets
+.env
+
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea/
+*.iml

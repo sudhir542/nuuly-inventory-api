@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nuuly-inventory-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
