@@ -1,0 +1,15 @@
+Your web API controllers and custom GlobalExceptionHandler design are completely approved. Let's proceed to Phase 8 to construct our permanent Testcontainers integration and verification test suite as mapped in spec §7. Please provide the implementation blocks for the following files:
+
+1. Testcontainers Base Abstract Class:
+   - File path: src/test/kotlin/com/nuuly/assessment/inventory/IntegrationTestBase.kt
+   - Provide an abstract base integration class that dynamically spins up a single shared PostgreSQL container (`postgres:15-alpine`) via `@Container` or manual static companion orchestration.
+   - Dynamically register the container's randomized JDBC connection parameters into Spring Boot's test properties context (`@DynamicPropertySource`) so Flyway migrations automatically target the container during test suite startup.
+
+2. Comprehensive API & Concurrency Integration Tests:
+   - File path: src/test/kotlin/com/nuuly/assessment/inventory/api/InventoryApiIntegrationTest.kt
+   - Build a suite annotated with `@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)` extending our base container class.
+   - Use `TestRestTemplate` or `WebTestClient` to test all four core operations defined in our OpenAPI specification.
+   - Implement deep validation logic for standard operational flows: creating items, reading items, listing elements, checking negative boundary parameters, and ensuring strict plain-text errors are returned.
+   - Implement a robust concurrency integration test mapping our multi-threaded locking contract: spin up multiple parallel threads (e.g., via `CompletableFuture` or an explicit `ExecutorService`) executing simultaneous `/purchase` calls against a single constrained SKU ID to verify that zero race conditions occur and final quantities match database invariants exactly.
+
+Provide complete, fully functional Kotlin source code blocks without high-level shortcuts or placeholders.
