@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: nuuly-inventory-api
+
+  # Local runs pick up the same git-ignored .env file that docker-compose uses.
+  # Deployed environments supply these variables from their secret store and have no .env file.
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:inventory_db}
+    # No defaults: startup fails if credentials are not provided.
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    hikari:
+      pool-name: inventory-pool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 2000
+      data-source-properties:
+        # Server-side limits applied to every pooled connection (tech-spec.md §4.7):
+        # bounded row-lock waits, bounded statements, and no lock-holding idle transactions.
+        options: "-c lock_timeout=3000 -c statement_timeout=5000 -c idle_in_transaction_session_timeout=10000"
+
+  jpa:
+    # Connections and row locks must never stay open while the response is being written.
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only verifies the entity mapping matches it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jackson:
+    deserialization:
+      # {"quantity": 2.7} is rejected instead of being truncated to 2.
+      accept-float-as-int: false
+    mapper:
+      # {"quantity": "5"} is rejected instead of being coerced to 5.
+      allow-coercion-of-scalars: false
+
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  shutdown: graceful
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db

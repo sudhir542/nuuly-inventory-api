@@ -1,0 +1,15 @@
+Your Jackson serialization validations and database timeout settings look completely solid. Let's move forward by generating the main entry application class and our custom domain exceptions layer. Please provide the implementation blocks for the following files one by one:
+
+1. The Spring Boot Entry Application Class:
+   - File path: src/main/kotlin/com/nuuly/assessment/inventory/InventoryApplication.kt
+   - Implement the standard class annotated with `@SpringBootApplication`. Ensure it sits in the root package directory (`com.nuuly.assessment.inventory`) so component-scanning safely registers all our domains, persistence hooks, and services automatically.
+
+2. The Custom Core Domain Exception Classes:
+   - File path: src/main/kotlin/com/nuuly/assessment/inventory/domain/exception/InventoryExceptions.kt
+   - Create clean, lightweight exception types that will be triggered by our business rules and translated down to our HTTP status codes later.
+   - Include:
+     - `SkuNotFoundException(skuId: String)`: Triggered when a GET or purchase request points to a non-existent item.
+     - `InsufficientInventoryException(skuId: String, requested: Int, available: Int)`: Triggered when a purchase operation fails due to insufficient stock levels.
+     - `InvalidQuantityException(message: String)`: Triggered if incoming stock operations breach bounds.
+
+Provide the complete, ready-to-use Kotlin code blocks. Do not use high-level abstractions or code placeholders.

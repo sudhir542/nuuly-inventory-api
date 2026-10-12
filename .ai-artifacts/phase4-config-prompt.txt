@@ -1,0 +1,11 @@
+The `InventoryEntity` design and compiler flag configuration are approved. Let's move forward by establishing our unified application environment parameters. Please provide the implementation block for the following file:
+
+- File path: src/main/resources/application.yml
+
+Ensure the YAML explicitly:
+1. Profiles standard Spring Boot datasource properties pointing to our PostgreSQL container, gracefully mapping username, password, and JDBC connection strings directly to our system environment variables (`${POSTGRES_USER}`, etc.).
+2. Restricts Hibernate DDL actions strictly to `validate` mode to match our spec design—ensuring the application fails fast during initialization if the entity layer mismatches our Flyway migration schema.
+3. Configures default Jackson mapping properties to strictly turn off string-to-integer coercion and float-to-integer truncation behaviors to maintain clean validation boundaries at our JSON ingress point.
+4. Activates Spring Boot Actuator endpoints (`/actuator/health`) to align with modern cloud-ready observability practices.
+
+Provide the complete, production-grade text block without high-level shortcuts or placeholders.

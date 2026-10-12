@@ -1,0 +1,11 @@
+Your database test results and package optimizations look exceptional. Let's proceed with generating the next logical layer so the repository can compile cleanly. Please provide the implementation blocks for the following two tasks one by one:
+
+1. The Complete `build.gradle.kts` Update:
+   - Provide the complete, updated build script.
+   - Ensure it includes the Kotlin JPA plugin, `allOpen` configuration (so Spring can proxy the entities cleanly), Flyway core/postgres dependencies, and `spring-boot-starter-validation`.
+
+2. The Kotlin Entity Class:
+   - File path: src/main/kotlin/com/nuuly/assessment/inventory/domain/InventoryEntity.kt
+   - Implement the JPA Entity matching the schema: standard `@Entity` and `@Table` mappings, `skuId` as the `@Id`, explicit timestamp tracking for auditing, and validation constraints matching our architectural spec.
+
+Generate the exact, ready-to-use code blocks. Do not use high-level abstractions or placeholders.

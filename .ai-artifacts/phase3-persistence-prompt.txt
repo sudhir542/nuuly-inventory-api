@@ -1,0 +1,13 @@
+Act as a Principal JVM Software Engineer. Based on the approved architectural decisions in our `tech-spec.md` (specifically utilizing Flyway migrations, database-level non-negative CHECK constraints, byte-wise "C" collation for SKU IDs, and explicit Pessimistic Write Locking for purchases), please generate the complete code for the following two infrastructure files:
+
+1. The SQL Flyway Migration Script:
+   - File path: src/main/resources/db/migration/V1__create_inventory_table.sql
+   - Include the table creation for `inventory` with proper primary key, check constraints, fillfactor, and automatic timestamp update triggers.
+
+2. The Kotlin Spring Data JPA Repository Interface:
+   - File path: src/main/java/com/nuuly/assessment/inventory/repository/InventoryRepository.kt (or corresponding package layout)
+   - Implement the standard CRUD methods.
+   - Implement a specialized query method for fetching an item by SKU ID using an explicit Pessimistic Write Lock (`@Lock(LockModeType.PESSIMISTIC_WRITE)`) to ensure thread isolation during purchases.
+   - Implement an atomic upsert native query using `INSERT ... ON CONFLICT (sku_id) DO UPDATE` to safely handle stock updates and additions.
+
+Generate the exact, complete, production-ready code blocks for these two files. Do not use high-level summaries or code placeholders.
